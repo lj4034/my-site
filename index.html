@@ -1,67 +1,400 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Lee 的第一个网站</title>
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
-      background: #f5f1ea;
-      color: #2b2b2b;
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 24px;
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>语言小站</title>
+<style>
+  :root {
+    --bg: #f6f3ee; --card: #ffffff; --ink: #24211d; --muted: #7a736a; --line: #e7e1d7;
+    --accent: #d2603a; --accent-soft: #fbe9e1; --ok: #2f8f5b; --ok-soft: #e3f3ea;
+    --bad: #c2413b; --bad-soft: #f9e2e0; --warn: #b7791f; --warn-soft: #fbf0dc;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1b1a18; --card: #262421; --ink: #f1ece4; --muted: #a39b90; --line: #3a3732;
+      --accent: #ef7d55; --accent-soft: #3a2a23; --ok: #5cc48a; --ok-soft: #1f3328;
+      --bad: #ef6f69; --bad-soft: #3a2422; --warn: #e0a84a; --warn-soft: #3a3020;
     }
-    .card {
-      background: #fff;
-      max-width: 560px;
-      width: 100%;
-      padding: 40px 36px;
-      border-radius: 16px;
-      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
-    }
-    h1 { font-size: 28px; margin-bottom: 12px; }
-    p { line-height: 1.8; margin-bottom: 16px; color: #555; }
-    ul { list-style: none; margin-bottom: 24px; }
-    li { padding: 8px 0; border-bottom: 1px dashed #e5ded3; }
-    li::before { content: "✓ "; color: #c46a3a; font-weight: bold; }
-    button {
-      background: #c46a3a;
-      color: #fff;
-      border: none;
-      padding: 10px 22px;
-      border-radius: 8px;
-      font-size: 15px;
-      cursor: pointer;
-    }
-    button:hover { background: #a85a30; }
-    #count { margin-top: 12px; font-size: 14px; color: #888; }
-  </style>
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans CJK SC", sans-serif; background: var(--bg); color: var(--ink); line-height: 1.6; }
+  button { font: inherit; color: inherit; }
+  .wrap { max-width: 920px; margin: 0 auto; padding: 28px 16px 64px; }
+  h1 { font-size: 28px; letter-spacing: 1px; }
+  h1 span { color: var(--accent); }
+  .sub { color: var(--muted); font-size: 14px; }
+
+  .langs { display: flex; flex-wrap: wrap; gap: 8px; margin: 18px 0 12px; }
+  .lang { border: 1px solid var(--line); background: var(--card); padding: 7px 14px; border-radius: 999px; cursor: pointer; }
+  .lang b { font-size: 11px; color: var(--muted); margin-right: 4px; letter-spacing: .5px; }
+  .lang.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .lang.active b { color: #fff; opacity: .8; }
+
+  .stats { display: flex; flex-wrap: wrap; gap: 8px 20px; color: var(--muted); font-size: 13px; margin-bottom: 4px; }
+  .stats strong { color: var(--ink); }
+  #voiceStatus { font-size: 12px; color: var(--muted); margin-bottom: 14px; }
+
+  .tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--line); margin-bottom: 20px; overflow-x: auto; }
+  .tab { background: none; border: none; padding: 10px 14px; cursor: pointer; color: var(--muted); border-bottom: 2px solid transparent; white-space: nowrap; }
+  .tab.active { color: var(--ink); border-bottom-color: var(--accent); font-weight: 600; }
+  .badge { display: inline-block; min-width: 18px; padding: 0 5px; border-radius: 9px; background: var(--accent); color: #fff; font-size: 11px; line-height: 18px; text-align: center; margin-left: 4px; }
+
+  .intro { background: var(--card); border: 1px solid var(--line); border-left: 4px solid var(--accent); border-radius: 10px; padding: 14px 16px; margin-bottom: 20px; font-size: 14px; }
+  h2 { font-size: 17px; margin: 22px 0 10px; }
+  .tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 8px; }
+  .tiles.wide { grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); }
+  .tile { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 10px 8px; text-align: center; cursor: pointer; }
+  .tile:hover { border-color: var(--accent); }
+  .tile .c { font-size: 24px; font-weight: 600; line-height: 1.3; }
+  .tile .r { font-size: 12px; color: var(--accent); }
+  .tile .e { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .tiles.wide .tile { text-align: left; padding: 12px; }
+
+  .level { font-size: 13px; color: var(--muted); margin: 18px 0 8px; letter-spacing: 1px; }
+  .lessons { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; }
+  .lesson { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 14px; cursor: pointer; text-align: left; }
+  .lesson:hover { border-color: var(--accent); }
+  .lesson .n { font-size: 12px; color: var(--muted); }
+  .lesson .t { font-size: 17px; font-weight: 600; margin: 2px 0; }
+  .lesson .m { font-size: 12px; color: var(--muted); }
+  .lesson.done { border-color: var(--ok); }
+  .lesson.done .n::after { content: " · ✓ 已学完"; color: var(--ok); }
+
+  .back { background: none; border: none; color: var(--muted); cursor: pointer; margin-bottom: 8px; }
+  .lesson-head { display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 10px; }
+  .lesson-head h3 { font-size: 22px; }
+  .grammar { background: var(--warn-soft); border-radius: 10px; padding: 14px 16px; font-size: 14px; margin: 14px 0; }
+  .grammar b { color: var(--warn); }
+  .items { display: grid; gap: 6px; }
+  .item { display: flex; align-items: center; gap: 12px; background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; }
+  .item .say { flex: none; width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--line); background: var(--bg); cursor: pointer; }
+  .item .say:hover { border-color: var(--accent); }
+  .item .txt { flex: 1; min-width: 0; }
+  .item .fl { font-size: 18px; font-weight: 600; word-break: break-word; }
+  .item .ro { font-size: 13px; color: var(--accent); font-style: italic; }
+  .item .zh { flex: none; max-width: 40%; text-align: right; color: var(--muted); font-size: 14px; }
+
+  .btn { border: 1px solid var(--line); background: var(--card); border-radius: 8px; padding: 8px 16px; cursor: pointer; }
+  .btn:hover { border-color: var(--accent); }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .btn.ok { background: var(--ok); border-color: var(--ok); color: #fff; }
+  .btn.bad { background: var(--bad); border-color: var(--bad); color: #fff; }
+  .btn:disabled { opacity: .5; cursor: default; }
+  .actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
+
+  .panel { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 24px; max-width: 600px; }
+  .panel .hint { color: var(--muted); font-size: 13px; }
+  .big { font-size: 28px; font-weight: 600; margin: 10px 0; word-break: break-word; }
+  .answer { border-top: 1px dashed var(--line); margin-top: 14px; padding-top: 14px; }
+  .answer .fl { font-size: 24px; font-weight: 600; }
+  .answer .ro { color: var(--accent); font-style: italic; }
+  input.write { width: 100%; font-size: 20px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--bg); color: var(--ink); margin: 12px 0 4px; }
+  input.write:focus { outline: 2px solid var(--accent); border-color: transparent; }
+  .result { margin-top: 12px; padding: 12px 14px; border-radius: 10px; font-size: 15px; }
+  .result.ok { background: var(--ok-soft); }
+  .result.warn { background: var(--warn-soft); }
+  .result.bad { background: var(--bad-soft); }
+  .empty { color: var(--muted); padding: 30px 0; }
+  footer { margin-top: 48px; color: var(--muted); font-size: 12px; text-align: center; }
+
+  @media (max-width: 560px) {
+    .item { flex-wrap: wrap; }
+    .item .zh { max-width: none; width: 100%; text-align: left; padding-left: 46px; margin-top: -6px; }
+    .big { font-size: 24px; }
+  }
+</style>
 </head>
 <body>
-  <div class="card">
-    <h1>你好,我是 Lee 👋</h1>
-    <p>这是我用 Git 管理的第一个网站。今天我完成了:</p>
-    <ul>
-      <li>安装 Git</li>
-      <li>配置用户名和邮箱</li>
-      <li>建好项目文件夹</li>
-      <li>做出第一个网页</li>
-    </ul>
-    <button onclick="cheer()">给自己点个赞</button>
-    <div id="count">还没点过赞</div>
-  </div>
+<div class="wrap">
+  <h1>语言<span>小站</span></h1>
+  <p class="sub">零基础入门 · 字母发音 → 分级课程 → 科学复习 → 听写</p>
 
-  <script>
-    let n = 0;
-    function cheer() {
-      n++;
-      document.getElementById("count").textContent = "已经点了 " + n + " 个赞 🎉";
-    }
-  </script>
+  <div class="langs" id="langs"></div>
+  <div class="stats" id="stats"></div>
+  <p id="voiceStatus"></p>
+
+  <nav class="tabs" id="tabs"></nav>
+  <main id="view"></main>
+
+  <footer>Lee 的语言小站 · 学习记录保存在你自己的浏览器里</footer>
+</div>
+
+<script src="data/en.js"></script>
+<script src="data/ja.js"></script>
+<script src="data/ko.js"></script>
+<script src="data/fr.js"></script>
+<script src="data/es.js"></script>
+<script src="data/de.js"></script>
+<script>
+const LANG_ORDER = ["en", "ja", "ko", "fr", "es", "de"];
+const INTERVALS = [1, 2, 4, 7, 15, 30, 60]; // 复习间隔(天),按遗忘曲线逐步拉长
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+// ---------- 存储 ----------
+const store = {
+  get(k, d) { try { const v = localStorage.getItem("ls2:" + k); return v ? JSON.parse(v) : d; } catch { return d; } },
+  set(k, v) { try { localStorage.setItem("ls2:" + k, JSON.stringify(v)); } catch {} },
+};
+let lang = store.get("lang", "en");
+if (!COURSE[lang]) lang = "en";
+let tab = store.get("tab", "abc");
+let openLesson = null;
+let done = store.get("done", {});   // { en: [0, 1] }
+let srs = store.get("srs", {});     // { "en|0|w|3": { box, due } }
+
+const C = () => COURSE[lang];
+const today = (offset = 0) => { const d = new Date(); d.setDate(d.getDate() + offset); return d.toLocaleDateString("sv-SE"); };
+const doneList = () => done[lang] || [];
+
+function itemsOf(li) {
+  const L = C().lessons[li], out = [];
+  L.w.forEach((x, i) => out.push({ id: `${lang}|${li}|w|${i}`, text: x[0], zh: x[1], ro: x[2] || "" }));
+  L.s.forEach((x, i) => out.push({ id: `${lang}|${li}|s|${i}`, text: x[0], zh: x[1], ro: x[2] || "" }));
+  return out;
+}
+function getItem(id) {
+  const [lg, li, kind, i] = id.split("|");
+  const L = COURSE[lg] && COURSE[lg].lessons[+li]; if (!L) return null;
+  const x = (kind === "w" ? L.w : L.s)[+i]; if (!x) return null;
+  return { id, text: x[0], zh: x[1], ro: x[2] || "" };
+}
+const dueIds = () => Object.keys(srs).filter(id => id.startsWith(lang + "|") && srs[id].due <= today() && getItem(id));
+
+// ---------- 朗读 ----------
+function voiceList() {
+  if (!("speechSynthesis" in window)) return [];
+  const full = C().voice.toLowerCase(), code = full.slice(0, 2);
+  return speechSynthesis.getVoices()
+    .filter(v => v.lang.replace("_", "-").toLowerCase().startsWith(code))
+    .map(v => ({ v, s: (v.localService ? 0 : 10) + (v.lang.replace("_", "-").toLowerCase() === full ? 0 : 3) + (/Multilingual/i.test(v.name) ? 5 : 0) }))
+    .sort((a, b) => a.s - b.s).map(x => x.v);
+}
+let currentU = null;
+function speak(text, rate = 0.85, tryIndex = 0) {
+  if (!("speechSynthesis" in window)) return voiceMsg("你的浏览器不支持朗读,请换用 Edge 或 Chrome。", true);
+  const vs = voiceList();
+  if (!vs.length) return voiceMsg(`没找到${C().name}语音。可在 Windows 设置 → 时间和语言 → 语音 里添加,或用手机打开。`, true);
+  if (tryIndex >= Math.min(vs.length, 3)) return voiceMsg(`${C().name}语音播放失败。在线语音需要能连上微软服务,可以添加本地语音包或用手机打开。`, true);
+  const v = vs[tryIndex];
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(String(text).replace(/\(.*?\)|(.*?)/g, "").trim());
+  u.voice = v; u.lang = v.lang; u.rate = rate;
+  let started = false;
+  u.onstart = () => { started = true; };
+  u.onerror = e => { if (!["interrupted", "canceled"].includes(e.error)) speak(text, rate, tryIndex + 1); };
+  currentU = u;
+  setTimeout(() => {
+    speechSynthesis.resume(); speechSynthesis.speak(u);
+    setTimeout(() => { if (!started && currentU === u) speak(text, rate, tryIndex + 1); }, 3000);
+  }, 80);
+}
+function voiceMsg(msg, bad) { const el = $("voiceStatus"); el.textContent = msg; el.style.color = bad ? "var(--bad)" : "var(--muted)"; }
+function updateVoice() {
+  const v = voiceList()[0];
+  if (v) voiceMsg(`🔊 发音:${v.name}${v.localService ? "(本地)" : "(在线)"}`);
+  else voiceMsg(`⚠️ 没找到${C().name}语音,点朗读不会有声音。可在 Windows 设置 → 时间和语言 → 语音 里添加。`, true);
+}
+
+// ---------- 顶部 ----------
+function renderTop() {
+  $("langs").innerHTML = LANG_ORDER.filter(k => COURSE[k]).map(k =>
+    `<button class="lang ${k === lang ? "active" : ""}" data-lang="${k}"><b>${COURSE[k].tag}</b>${COURSE[k].name}</button>`).join("");
+  const total = Object.keys(srs).filter(id => id.startsWith(lang + "|")).length;
+  const mastered = Object.keys(srs).filter(id => id.startsWith(lang + "|") && srs[id].box >= 4).length;
+  $("stats").innerHTML = `<span>课程 <strong>${doneList().length} / ${C().lessons.length}</strong></span>
+    <span>复习库 <strong>${total}</strong> 个</span><span>已牢记 <strong>${mastered}</strong> 个</span>
+    <span>今天待复习 <strong>${dueIds().length}</strong> 个</span>`;
+  const due = dueIds().length;
+  const tabs = [["abc", "字母发音"], ["course", "课程"], ["review", "复习" + (due ? `<span class="badge">${due}</span>` : "")], ["dict", "听写"]];
+  $("tabs").innerHTML = tabs.map(([k, t]) => `<button class="tab ${k === tab ? "active" : ""}" data-tab="${k}">${t}</button>`).join("");
+  updateVoice();
+}
+
+// ---------- 字母发音 ----------
+function renderAbc() {
+  const A = C().alphabet;
+  let h = `<div class="intro">${esc(A.intro)}</div>`;
+  A.groups.forEach(g => {
+    const wide = g.items.some(it => it[1].length > 8 || (it[2] && it[2].length > 0));
+    h += `<h2>${esc(g.name)}</h2><div class="tiles ${wide ? "wide" : ""}" ${g.cols ? `style="grid-template-columns:repeat(${g.cols},minmax(0,1fr));max-width:560px"` : ""}>`;
+    g.items.forEach(([c, r, ex, say]) => {
+      if (!c) { h += `<div></div>`; return; }
+      const sayText = say || c.split(" ")[0];
+      h += `<div class="tile" data-say="${esc(sayText)}">
+        <div class="c">${esc(c)}</div><div class="r">${esc(r)}</div>
+        ${ex ? `<div class="e">${esc(ex)}</div>` : ""}</div>`;
+    });
+    h += `</div>`;
+  });
+  h += `<p class="hint" style="margin-top:16px;color:var(--muted);font-size:13px">点任意卡片听发音。熟悉之后,去「课程」开始第一课。</p>`;
+  return h;
+}
+
+// ---------- 课程 ----------
+function renderCourse() {
+  if (openLesson !== null) return renderLesson(openLesson);
+  const Ls = C().lessons;
+  let h = "", lastLevel = "";
+  Ls.forEach((L, i) => {
+    if (L.level !== lastLevel) { if (lastLevel) h += `</div>`; h += `<div class="level">${esc(L.level)}</div><div class="lessons">`; lastLevel = L.level; }
+    h += `<button class="lesson ${doneList().includes(i) ? "done" : ""}" data-lesson="${i}">
+      <div class="n">第 ${i + 1} 课</div><div class="t">${esc(L.title)}</div>
+      <div class="m">${L.w.length} 个单词 · ${L.s.length} 个句子 · 语法</div></button>`;
+  });
+  return h + `</div>`;
+}
+function itemRow(it) {
+  return `<div class="item"><button class="say" data-say="${esc(it.text)}" aria-label="朗读">🔊</button>
+    <div class="txt"><div class="fl">${esc(it.text)}</div>${it.ro ? `<div class="ro">${esc(it.ro)}</div>` : ""}</div>
+    <div class="zh">${esc(it.zh)}</div></div>`;
+}
+function renderLesson(li) {
+  const L = C().lessons[li], its = itemsOf(li);
+  const isDone = doneList().includes(li);
+  return `<button class="back" data-back>← 返回课程列表</button>
+    <div class="lesson-head"><div><div class="sub">第 ${li + 1} 课 · ${esc(L.level)}</div><h3>${esc(L.title)}</h3></div>
+    <button class="btn" data-playall="${li}">▶ 全部朗读</button></div>
+    <h2>单词</h2><div class="items">${its.filter(x => x.id.includes("|w|")).map(itemRow).join("")}</div>
+    <h2>句子</h2><div class="items">${its.filter(x => x.id.includes("|s|")).map(itemRow).join("")}</div>
+    <div class="grammar"><b>📘 语法要点</b><br>${esc(L.g)}</div>
+    <div class="actions">
+      ${isDone ? `<button class="btn ok" disabled>✓ 本课已学完,内容在复习库里</button>`
+               : `<button class="btn primary" data-finish="${li}">学完了,加入复习库</button>`}
+      ${li + 1 < C().lessons.length ? `<button class="btn" data-lesson="${li + 1}">下一课 →</button>` : ""}
+    </div>`;
+}
+function finishLesson(li) {
+  const list = new Set(doneList()); list.add(li); done[lang] = [...list]; store.set("done", done);
+  itemsOf(li).forEach(it => { if (!srs[it.id]) srs[it.id] = { box: 0, due: today() }; });
+  store.set("srs", srs);
+  render();
+}
+let playTimer = null;
+function playAll(li) {
+  const its = itemsOf(li); let k = 0; clearTimeout(playTimer);
+  const next = () => { if (k >= its.length) return; speak(its[k].text); k++; playTimer = setTimeout(next, 600 + its[k - 1].text.length * 140); };
+  next();
+}
+
+// ---------- 复习 ----------
+let rev = { queue: [], shown: false, doneCount: 0 };
+function startReview() { rev = { queue: dueIds().sort(() => Math.random() - .5), shown: false, doneCount: 0 }; }
+function renderReview() {
+  if (!Object.keys(srs).some(id => id.startsWith(lang + "|")))
+    return `<div class="empty">复习库还是空的。去「课程」学完一课,点「学完了,加入复习库」,第二天这里就会出现要复习的内容。</div>`;
+  if (!rev.queue.length) startReview();
+  if (!rev.queue.length) {
+    const next = Object.keys(srs).filter(id => id.startsWith(lang + "|")).map(id => srs[id].due).sort()[0];
+    return `<div class="panel"><div class="big">今天的复习完成了 🎉</div>
+      <p class="hint">${rev.doneCount ? `刚刚复习了 ${rev.doneCount} 个。` : ""}下一次复习:${next}。按遗忘曲线,记住的内容会隔越来越久再出现。</p>
+      <div class="actions"><button class="btn" data-tab="course">去学新课</button><button class="btn" data-tab="dict">做听写练习</button></div></div>`;
+  }
+  const it = getItem(rev.queue[0]), s = srs[it.id];
+  return `<div class="panel">
+    <div class="hint">剩余 ${rev.queue.length} 个 · 熟练度 ${"●".repeat(s.box)}${"○".repeat(6 - s.box)}</div>
+    <div class="hint" style="margin-top:12px">这句用${C().name}怎么说?</div>
+    <div class="big">${esc(it.zh)}</div>
+    ${rev.shown ? `<div class="answer"><div class="fl">${esc(it.text)}</div>${it.ro ? `<div class="ro">${esc(it.ro)}</div>` : ""}
+      <div class="actions">
+        <button class="btn bad" data-grade="0">忘了</button>
+        <button class="btn" data-grade="1">有点模糊</button>
+        <button class="btn ok" data-grade="2">记得</button>
+        <button class="btn" data-say="${esc(it.text)}">🔊 再听</button>
+      </div></div>`
+      : `<div class="actions"><button class="btn primary" data-reveal>显示答案</button></div>`}
+  </div>`;
+}
+function grade(g) {
+  const id = rev.queue.shift(), s = srs[id];
+  if (g === 0) { s.box = 0; s.due = today(); rev.queue.push(id); }          // 忘了:今天再来一次
+  else if (g === 1) { s.due = today(1); rev.doneCount++; }                    // 模糊:明天再复习
+  else { s.box = Math.min(s.box + 1, 6); s.due = today(INTERVALS[s.box]); rev.doneCount++; } // 记得:间隔拉长
+  store.set("srs", srs); rev.shown = false; render();
+}
+
+// ---------- 听写 ----------
+let dict = null;
+const LATIN = ["en", "fr", "es", "de"];
+function dictPool() {
+  const lessons = doneList().length ? doneList() : [0];
+  return lessons.flatMap(li => itemsOf(li));
+}
+function newDict() {
+  const pool = dictPool(); let it;
+  do { it = pool[Math.floor(Math.random() * pool.length)]; } while (pool.length > 1 && dict && dict.item.id === it.id);
+  dict = { item: it, result: null, showZh: false, score: dict ? dict.score : 0, total: dict ? dict.total : 0, lang };
+}
+const norm = s => s.normalize("NFC").toLowerCase().replace(/[\p{P}\p{S}\s]/gu, "");
+const stripAccents = s => s.normalize("NFD").replace(/\p{M}/gu, "");
+function checkDict(val) {
+  const a = norm(val), b = norm(dict.item.text);
+  dict.total++;
+  if (a && a === b) { dict.result = "ok"; dict.score++; }
+  else if (a && LATIN.includes(lang) && stripAccents(a) === stripAccents(b)) { dict.result = "warn"; dict.score++; }
+  else dict.result = "bad";
+  render();
+}
+function renderDict() {
+  if (!dict || dict.lang !== lang) { dict = null; newDict(); }
+  const it = dict.item;
+  const src = doneList().length ? `从你学完的 ${doneList().length} 课里出题` : `还没学完任何一课,先从第 1 课出题`;
+  const ime = ["ja", "ko"].includes(lang) ? `输入${C().name}需要在电脑上添加${C().name}输入法(手机键盘一般自带)。` : "";
+  let res = "";
+  if (dict.result === "ok") res = `<div class="result ok">✓ 完全正确!</div>`;
+  if (dict.result === "warn") res = `<div class="result warn">基本正确,注意重音或变音符号。正确写法:<b>${esc(it.text)}</b></div>`;
+  if (dict.result === "bad") res = `<div class="result bad">正确答案:<b>${esc(it.text)}</b>${it.ro ? `(${esc(it.ro)})` : ""}<br>意思:${esc(it.zh)}</div>`;
+  return `<div class="panel">
+    <div class="hint">${src} · 已答对 ${dict.score} / ${dict.total}</div>
+    <div class="actions" style="margin-top:14px">
+      <button class="btn primary" data-dsay="1">🔊 播放</button>
+      <button class="btn" data-dsay="0.55">🐢 慢速</button>
+      <button class="btn" data-dzh>${dict.showZh ? esc(it.zh) : "💡 看中文提示"}</button>
+    </div>
+    <input class="write" id="dictInput" placeholder="听到什么就写什么,按回车检查" autocomplete="off" autocapitalize="off" spellcheck="false" ${dict.result ? "disabled" : ""}>
+    <div class="hint">标点和大小写不影响判断。${ime}</div>
+    ${res}
+    <div class="actions">${dict.result ? `<button class="btn primary" data-dnext>下一题 →</button>` : `<button class="btn" data-dcheck>检查</button><button class="btn" data-dskip>不会,看答案</button>`}</div>
+  </div>`;
+}
+
+// ---------- 总渲染 ----------
+function render() {
+  renderTop();
+  const v = { abc: renderAbc, course: renderCourse, review: renderReview, dict: renderDict }[tab] || renderAbc;
+  $("view").innerHTML = v();
+  if (tab === "dict") {
+    const inp = $("dictInput");
+    if (inp && !dict.result) inp.focus();
+    if (inp && !dict.autoplayed) { dict.autoplayed = true; speak(dict.item.text); }
+  }
+}
+
+document.addEventListener("click", e => {
+  const t = e.target.closest("[data-lang],[data-tab],[data-say],[data-lesson],[data-back],[data-finish],[data-playall],[data-reveal],[data-grade],[data-dsay],[data-dzh],[data-dcheck],[data-dskip],[data-dnext]");
+  if (!t) return;
+  const d = t.dataset;
+  if (d.lang) { lang = d.lang; store.set("lang", lang); openLesson = null; rev = { queue: [], shown: false, doneCount: 0 }; dict = null; render(); }
+  else if (d.tab) { tab = d.tab; store.set("tab", tab); if (tab === "review") rev = { queue: [], shown: false, doneCount: 0 }; render(); window.scrollTo(0, 0); }
+  else if (d.say !== undefined) speak(d.say);
+  else if (d.lesson !== undefined) { openLesson = +d.lesson; render(); window.scrollTo(0, 0); }
+  else if (d.back !== undefined) { openLesson = null; render(); }
+  else if (d.finish !== undefined) finishLesson(+d.finish);
+  else if (d.playall !== undefined) playAll(+d.playall);
+  else if (d.reveal !== undefined) { rev.shown = true; render(); speak(getItem(rev.queue[0]).text); }
+  else if (d.grade !== undefined) grade(+d.grade);
+  else if (d.dsay !== undefined) speak(dict.item.text, +d.dsay < 1 ? +d.dsay : 0.85);
+  else if (d.dzh !== undefined) { dict.showZh = true; render(); }
+  else if (d.dcheck !== undefined) checkDict($("dictInput").value);
+  else if (d.dskip !== undefined) checkDict("");
+  else if (d.dnext !== undefined) { newDict(); render(); }
+});
+document.addEventListener("keydown", e => {
+  if (e.key === "Enter" && e.target.id === "dictInput" && !dict.result) checkDict(e.target.value);
+});
+if ("speechSynthesis" in window) { speechSynthesis.getVoices(); speechSynthesis.onvoiceschanged = updateVoice; }
+render();
+</script>
 </body>
 </html>
