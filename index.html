@@ -172,29 +172,31 @@ function voiceList() {
     .sort((a, b) => a.s - b.s).map(x => x.v);
 }
 let currentU = null;
+const inWeChat = /MicroMessenger/i.test(navigator.userAgent);
 function speak(text, rate = 0.85, tryIndex = 0) {
-  if (!("speechSynthesis" in window)) return voiceMsg("你的浏览器不支持朗读,请换用 Edge 或 Chrome。", true);
+  if (!("speechSynthesis" in window)) return voiceMsg(inWeChat ? "微信里不支持朗读。请点右上角「…」→「在浏览器中打开」。" : "这个浏览器不支持朗读,请换用 Chrome、Edge 或手机自带浏览器。", true);
   const vs = voiceList();
-  if (!vs.length) return voiceMsg(`没找到${C().name}语音。可在 Windows 设置 → 时间和语言 → 语音 里添加,或用手机打开。`, true);
-  if (tryIndex >= Math.min(vs.length, 3)) return voiceMsg(`${C().name}语音播放失败。在线语音需要能连上微软服务,可以添加本地语音包或用手机打开。`, true);
-  const v = vs[tryIndex];
-  speechSynthesis.cancel();
+  if (vs.length && tryIndex >= Math.min(vs.length, 3)) return voiceMsg(`${C().name}语音播放失败。可以检查手机是否静音,或换个浏览器试试。`, true);
+  if (!vs.length && tryIndex > 0) return voiceMsg(`没找到${C().name}语音。电脑上可在 设置 → 时间和语言 → 语音 里添加;手机可在系统的「文字转语音」设置里下载。`, true);
+  // 手机浏览器要求在点击的同一时刻发声,所以这里不能延迟
+  if (speechSynthesis.speaking || speechSynthesis.pending) speechSynthesis.cancel();
   const u = new SpeechSynthesisUtterance(String(text).replace(/\(.*?\)|(.*?)/g, "").trim());
-  u.voice = v; u.lang = v.lang; u.rate = rate;
+  u.lang = C().voice; u.rate = rate;
+  if (vs[tryIndex]) { u.voice = vs[tryIndex]; u.lang = vs[tryIndex].lang; } // 没拿到语音列表时,交给浏览器按语言自动选
   let started = false;
   u.onstart = () => { started = true; };
   u.onerror = e => { if (!["interrupted", "canceled"].includes(e.error)) speak(text, rate, tryIndex + 1); };
   currentU = u;
-  setTimeout(() => {
-    speechSynthesis.resume(); speechSynthesis.speak(u);
-    setTimeout(() => { if (!started && currentU === u) speak(text, rate, tryIndex + 1); }, 3000);
-  }, 80);
+  speechSynthesis.resume();
+  speechSynthesis.speak(u);
+  setTimeout(() => { if (!started && currentU === u && vs.length > 1) speak(text, rate, tryIndex + 1); }, 3000);
 }
 function voiceMsg(msg, bad) { const el = $("voiceStatus"); el.textContent = msg; el.style.color = bad ? "var(--bad)" : "var(--muted)"; }
 function updateVoice() {
   const v = voiceList()[0];
   if (v) voiceMsg(`🔊 发音:${v.name}${v.localService ? "(本地)" : "(在线)"}`);
-  else voiceMsg(`⚠️ 没找到${C().name}语音,点朗读不会有声音。可在 Windows 设置 → 时间和语言 → 语音 里添加。`, true);
+  else if (!("speechSynthesis" in window)) voiceMsg(inWeChat ? "⚠️ 微信里不支持朗读。请点右上角「…」→「在浏览器中打开」。" : "⚠️ 这个浏览器不支持朗读。", true);
+  else voiceMsg(`🔊 发音:由浏览器自动选择${C().name}语音`);
 }
 
 // ---------- 顶部 ----------
